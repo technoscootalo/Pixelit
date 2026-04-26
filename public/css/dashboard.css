@@ -224,6 +224,20 @@ body {
   box-shadow: inset 0 -0.265vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6);
 }
 
+.spin:hover {
+  box-shadow: inset 0 -0.3vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-5px);
+  transition: transform 0.15s ease-out;
+}
+
+.spin {
+  transition: transform 0.2s ease-in;
+}
+
+.spin:active {
+  transform: translateY(0);
+}
+
 @media screen and (max-width: 600px) {
   .spin {
     display: flex;
@@ -232,17 +246,23 @@ body {
   }
 }
 
-.spin:hover {
-  box-shadow: inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6);
-}
-
 .manageBlooks {
   background-color: rgb(30, 146, 255);
   box-shadow: inset 0 -0.265vw rgb(18, 76, 130), 3px 3px 15px rgba(0, 0, 0, 0.6);
 }
 
 .manageBlooks:hover {
-  box-shadow: inset 0 -0.5vw rgb(18, 76, 130), 3px 3px 15px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 -0.3vw rgb(18, 76, 130), 3px 3px 15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-5px);
+  transition: transform 0.15s ease-out;
+}
+
+.manageBlooks {
+  transition: transform 0.2s ease-in;
+}
+
+.manageBlooks:active {
+  transform: translateY(0);
 }
 
 .viewUser {
@@ -251,7 +271,17 @@ body {
 }
 
 .viewUser:hover {
-  box-shadow: inset 0 -0.5vw #cc8219, 3px 3px 15px rgba(0, 0, 0, 0.6);
+  box-shadow: inset 0 -0.3vw #cc8219, 3px 3px 15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-5px);
+  transition: transform 0.15s ease-out;
+}
+
+.viewUser {
+  transition: transform 0.2s ease-in;
+}
+
+.viewUser:active {
+  transform: translateY(0);
 }
 
 .stat_box {

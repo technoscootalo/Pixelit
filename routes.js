@@ -1321,7 +1321,6 @@ router.post('/storeWebhook', bodyParser.raw({ type: 'application/json' }), async
   res.json({ received: true });
 });
 
-
 router.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'public', 'site', '404.html'));
 });

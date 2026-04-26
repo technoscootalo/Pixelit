@@ -268,6 +268,16 @@ body {
 
 .blook-details button:hover {
   box-shadow: inset 0 -0.5vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-5px);
+  transition: transform 0.15s ease-out;
+}
+
+.blook-details button {
+  transition: transform 0.2s ease-in;
+}
+
+.blook-details button:active {
+  transform: translateY(0);
 }
 
 .button-container {
@@ -310,6 +320,7 @@ body {
   right: 175%;
 }
 
+
 .close {
   color: #aaa;
   float: right;
@@ -345,7 +356,7 @@ body {
 
 .giftButton {
   position: fixed;
-  bottom: 150px;
+  bottom: 130px;
   right: 180px;
   font-family: Pixelify Sans;
   padding: 12px 18px;
@@ -370,6 +381,16 @@ body {
 
 .giftButton:hover {
   box-shadow: inset 0 -0.5vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
+  transform: translateY(-5px);
+  transition: transform 0.15s ease-out;
+}
+
+.giftButton {
+  transition: transform 0.2s ease-in;
+}
+
+.giftButton:active {
+  transform: translateY(0);
 }
 
 @media screen and (max-width: 600px) {

@@ -63,11 +63,22 @@ function showModal(message) {
     `;
 
     okButton.onmouseover = () => {
-        okButton.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+        okButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+        okButton.style.transform = 'translateY(-5px)';
+        okButton.style.transition = 'transform 0.15s ease-out';
     };
 
     okButton.onmouseout = () => {
-        okButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+        okButton.style.boxShadow = 'inset 0 -0.3vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+        okButton.style.transform = 'translateY(0)';
+    };
+
+    okButton.onmousedown = () => {
+        okButton.style.transform = 'translateY(0)';
+    };
+
+    okButton.onmouseup = () => {
+        okButton.style.transform = 'translateY(-5px)';
     };
 
     okButton.onclick = () => {

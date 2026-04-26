@@ -203,7 +203,7 @@ function openPfpChangeModal(packs) {
     box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
     padding: 20px;
     border-radius: 8px;
-    width: 90%;
+    width: 93%;
     max-width: 950px
     max-height: 100vh;
     overflow-y: auto;
@@ -240,12 +240,13 @@ function openPfpChangeModal(packs) {
             background-color: #6f057a;
             box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
           `;
-          pixelItem.onmouseover = () => {
+            pixelItem.onmouseover = () => {
             pixelItem.style.transform = 'scale(1.1)';
-          };
-          pixelItem.onmouseout = () => {
+            pixelItem.style.transition = 'transform 0.15s ease-out';
+            };
+            pixelItem.onmouseout = () => {
             pixelItem.style.transform = 'scale(1)';
-          };
+            };
 
           const img = document.createElement('img');
           img.src = blook.imageUrl;
@@ -315,9 +316,21 @@ function openPfpChangeModal(packs) {
   `;
   closeButton.onmouseover = () => {
     closeButton.style.boxShadow = 'inset 0 -0.5vw #800000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    closeButton.style.transform = 'translateY(-5px)';
+    closeButton.style.transition = 'transform 0.15s ease-out';
   };
+
   closeButton.onmouseout = () => {
     closeButton.style.boxShadow = 'inset 0 -0.365vw #800000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    closeButton.style.transform = 'translateY(0)';
+  };
+
+  closeButton.onmousedown = () => {
+    closeButton.style.transform = 'translateY(0)';
+  };
+
+  closeButton.onmouseup = () => {
+    closeButton.style.transform = 'translateY(-5px)';
   };
   closeButton.onclick = () => document.body.removeChild(modal);
   modalContent.appendChild(closeButton);
@@ -474,13 +487,23 @@ function openViewUserPopup() {
     transition: box-shadow 0.3s ease;
     margin-left: 60px;
   `;
-
   viewButton.onmouseover = () => {
     viewButton.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    viewButton.style.transform = 'translateY(-5px)';
+    viewButton.style.transition = 'transform 0.15s ease-out';
   };
 
   viewButton.onmouseout = () => {
     viewButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    viewButton.style.transform = 'translateY(0)';
+  };
+
+  viewButton.onmousedown = () => {
+    viewButton.style.transform = 'translateY(0)';
+  };
+
+  viewButton.onmouseup = () => {
+    viewButton.style.transform = 'translateY(-5px)';
   };
 
   viewButton.onclick = () => {
@@ -506,16 +529,27 @@ function openViewUserPopup() {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: box-shadow 0.3s ease;
+    transition: transform 0.2s ease-in, box-shadow 0.3s ease;
     margin-right: 60px;
   `;
 
   cancelButton.onmouseover = () => {
-    cancelButton.style.boxShadow = 'inset 0 -0.5vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    cancelButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    cancelButton.style.transform = 'translateY(-5px)';
+    cancelButton.style.transition = 'transform 0.15s ease-out';
   };
 
   cancelButton.onmouseout = () => {
-    cancelButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    cancelButton.style.boxShadow = 'inset 0 -0.3vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
+    cancelButton.style.transform = 'translateY(0)';
+  };
+
+  cancelButton.onmousedown = () => {
+    cancelButton.style.transform = 'translateY(0)';
+  };
+
+  cancelButton.onmouseup = () => {
+    cancelButton.style.transform = 'translateY(-5px)';
   };
 
   cancelButton.onclick = () => {
