@@ -577,7 +577,7 @@ giftButton.addEventListener("click", () => {
         text-align: center;
         font-size: 32px;
         width: 350px;
-        height: 300px;
+        height: 280px;
         position: relative; 
     `;
 

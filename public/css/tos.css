@@ -4,6 +4,7 @@ body {
   margin: 0;
   padding: 0;
 }
+
 .bg_img {
   position: fixed;
   width: 250%;
@@ -16,7 +17,14 @@ body {
   background-image: url("https://izumiihd.github.io/pixelitcdn/assets/background.png");
   transform: translate(-50%, -50%) rotate(15deg);
   opacity: 0.1;
+  animation: moveBackground 25s linear infinite ;
 }
+
+@keyframes moveBackground {
+  from { background-position: -100px -100px; }
+  to { background-position: -100px 1100px; }
+}
+
 .navbar {
   overflow: hidden;
   background-color: #6f057a;
@@ -24,6 +32,7 @@ body {
   border-bottom-right-radius: 0;
   box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6)
 }
+
 @media screen and (max-width: 600px) {
   .navbar {
     border-radius: 0; 
@@ -40,6 +49,7 @@ body {
     border-radius: 0;
   }
 }
+
 .navbar a {
   float: left;
   font-size: 16px;
@@ -49,10 +59,12 @@ body {
   text-decoration: none;
   text-shadow: #000 1px 0 13px;
 }
+
 .dropdown {
   float: left;
   overflow: hidden;
 }
+
 .dropdown .dropbtn {
   font-size: 16px;
   border: none;
@@ -63,10 +75,12 @@ body {
   font-family: inherit;
   margin: 0;
 }
+
 .navbar a:hover,
 .dropdown:hover .dropbtn {
   background-color: purple;
 }
+
 .dropdown-content {
   display: none;
   position: absolute;
@@ -77,6 +91,7 @@ body {
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
 }
+
 .dropdown-content a {
   float: none;
   color: black;
@@ -86,16 +101,20 @@ body {
   text-align: left;
 
 }
+
 .dropdown-content a:hover {
   background-color: purple;
 }
+
 .dropdown-content a:last-child:hover{
   border-radius: 0 0 10px 10px;
   box-shadow: inset 0 -0.365vw #660066, 3px 3px 15px rgba(0, 0, 0, 0.6);
 }
+
 .dropdown:hover .dropdown-content {
   display: block;
 }
+
 .title_p {
   margin-left: 92%;
   position: absolute;
@@ -104,6 +123,7 @@ body {
   color: #fff;
   text-shadow: #000 1px 0 13px;
 }
+
 @media screen and (max-width: 600px) {
   .title_p {
     margin-left: 80%;
@@ -111,96 +131,47 @@ body {
     top: 1%;
     font-size: 24px;
     color: #fff;
-    text-shadow: #000 1px 0 13px;  }
-}
-.login-container {
-  width: 440px;
-  font-size: 18px;
-  border-radius: 5px;
-  background-color: #6f057a;
-  color: white;
-  border: none;
-  box-sizing: border-box;
-  padding: 10px 20px;
-  font-family: Pixelify Sans;
-  margin: 0px auto 0;
-  box-shadow: inset 0 -0.365vw #5a0463, 3px 3px 15px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-}
-@media screen and (max-width: 600px) {
-  .login-container {
-    width: 350px;
-    padding: 20px;
+    text-shadow: #000 1px 0 13px;
   }
 }
-.login-title {
-  font-size: 40px;
-  text-align: center;
-  margin-bottom: 20px;
-}
-.form-group input {
-  font-family: 'Pixelify Sans', sans-serif;
-  background-color: transparent;
-  border: 3px solid rgb(94, 4, 110);
-  border-radius: 5px;
-  padding-left: 10px;
-  width: 100%;
-  color: #FFFFFF;
-}
-.form-group input {
-  width: 100%;
-  padding: 10px;
-  font-size: 1rem;
-}
-.form-group input#psw {
-  border: 3px solid rgb(94, 4, 110);
-}
-.remember-label {
-  text-align: center;
-  display: block;
-}
-.button-container {
+
+header {
+  padding: 20px;
   text-align: center;
 }
-.submit-button {
-  width: auto;
-  font-size: 20px;
-  border-radius: 5px;
-  background-color: #6f057a;
-  color: white;
-  border: 3px solid rgb(94, 4, 110);
-  padding: 15px 30px;
-  cursor: pointer;
-  font-family: 'Pixelify Sans', sans-serif;
-  pointer-events: auto;
-  cursor: pointer; 
-  position: relative;
-  top: 0;
-  left: 0;
-  transition: background-color 0.3s ease;
+
+header h1 {
+  margin: 0;
+  color: #fff;
 }
-.submit-button:hover {
-  background-color: #51005e;
+
+.container {
+  padding: 40px 20px;
+  max-width: 900px;
+  margin: auto;
 }
-.submit-button:mouseout {
-  background-color: #6f057a;
+
+h2 {
+  color: #fff;
+  margin-top: 30px;
 }
-#error-message {
-  color: white;
-  margin-top: 10px;
+a {
+  color: #fff;
+  text-decoration: none;
 }
-.spacer {
-  height: 150px;
+
+a:hover {
+  text-decoration: underline;
 }
-.login-container {
-  margin-top: 40px;
+
+ul {
+  margin-left: 20px;
 }
-.form-group {
-  margin-bottom: 20px;
-}
-.button-container {
-  margin-top: 20px;
+
+footer {
+  text-align: center;
+  padding: 20px;
+  margin-top: 50px;
+  font-size: 14px;
+  color: #999;
 }

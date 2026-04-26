@@ -14,8 +14,50 @@ function parseMessage(str) {
     });
     const safeStr = escapeHTML(str);
     const parsed = marked.parse(safeStr);
+    const sanitized = DOMPurify.sanitize(parsed);
 
-    return DOMPurify.sanitize(parsed);
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = sanitized;
+    highlightMentions(wrapper);
+
+    return wrapper.innerHTML;
+}
+
+function highlightMentions(node) {
+    if (!username) return;
+    if (node.nodeType === Node.TEXT_NODE) {
+        const mentionRegex = new RegExp(`@${escapeRegExp(username)}\\b`, 'gi');
+        const text = node.nodeValue;
+        if (!mentionRegex.test(text)) return;
+
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        mentionRegex.lastIndex = 0;
+        let match;
+
+        while ((match = mentionRegex.exec(text)) !== null) {
+            const before = text.slice(lastIndex, match.index);
+            if (before) fragment.appendChild(document.createTextNode(before));
+
+            const mentionSpan = document.createElement('span');
+            mentionSpan.className = 'mention';
+            mentionSpan.textContent = match[0];
+            fragment.appendChild(mentionSpan);
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        const after = text.slice(lastIndex);
+        if (after) fragment.appendChild(document.createTextNode(after));
+
+        node.parentNode.replaceChild(fragment, node);
+    } else if (node.nodeType === Node.ELEMENT_NODE && node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE') {
+        Array.from(node.childNodes).forEach(child => highlightMentions(child));
+    }
+}
+
+function escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function ge(id) {
@@ -24,6 +66,7 @@ function ge(id) {
 
 let messages = [];
 let username, pfp, badges;
+let currentReply = null;
 
 fetch("/user", {
     method: 'GET',
@@ -112,52 +155,167 @@ function formatTimestamp(timestamp) {
     }
 }
 
-function createMessageHTML(message) {
-    const username = escapeHTML(message.sender);
-    const badgesHTML = (message.badges || []).map(
-        badge => `<img src="${escapeHTML(badge.image)}" draggable="false" class="badge" />`
-    ).join("");
+// message grouping stuff
+function createMessageContent(message) {
+    const content = document.createElement('div');
     const mediaUrlPattern = /(https?:\/\/[^\s]+\.(gif|jpeg|jpg|png|bmp|webp|svg|tiff|tif|ico)|data:image\/[a-zA-Z]+;base64,[^\s]+)/i;
-    let messageContent;
     if (mediaUrlPattern.test(message.msg) && isValidUrl(message.msg)) {
-        messageContent = `
-            <img 
-                src="${escapeHTML(message.msg)}" 
-                class="chatImages" 
-                style="margin-top: 10px;" 
-                onclick="openModal('${escapeHTML(message.msg)}')" />
-            <br>`;
+        const img = document.createElement('img');
+        img.src = message.msg;
+        img.className = 'chatImages';
+        img.style.marginTop = '10px';
+        img.draggable = false;
+        img.onclick = () => openModal(message.msg);
+        img.onerror = function() {
+            this.src = 'https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png';
+        };
+        content.appendChild(img);
     } else {
-        messageContent = parseMessage(message.msg);
+        content.innerHTML = parseMessage(message.msg);
+        twemoji.parse(content);
     }
-    messageContent = twemoji.parse(messageContent);
-    const formattedTime = formatTimestamp(message.timestamp);
-    const timestampHTML = formattedTime ? 
-        `<span class="timestamp" style="font-size: 10px;">${formattedTime}</span>` : 
-        `<span class="timestamp" style="font-size: 10px;">Invalid Date</span>`;
-    return `
-    <div class="message">
-        <div class="pfp">
-            <img
-                src="${escapeHTML(message.pfp)}"
-                draggable="false"
-                style="filter: drop-shadow(0 0 5px rgba(0, 0, 0, 0.5))"
-                onerror="this.src='https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png';"
-            />
-        </div>
-        <div class="messageContainer">
-            <div class="usernameAndBadges">
-                <div class="username">${username} ${timestampHTML}</div>
-                <br>
-                <div class="badges">${badgesHTML}</div>
-            </div>
-            <div class="messageText">${messageContent}</div>
-        </div>
-    </div>
-    <br>
-    <br>`;
+    return content;
 }
 
+function createGroupedMessageItem(message) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'groupedMessage';
+
+    const textContainer = document.createElement('div');
+    textContainer.className = 'messageText';
+
+    if (message.replyTo) {
+        const replyPreview = document.createElement('div');
+        replyPreview.className = 'replyPreview';
+        const previewText = `@${message.replyTo.sender}: ${message.replyTo.msg}`;
+        replyPreview.textContent = previewText.length > 140 ? previewText.slice(0, 137) + '...' : previewText;
+        textContainer.appendChild(replyPreview);
+    }
+
+    const content = createMessageContent(message);
+    if (content.firstChild && content.firstChild.tagName === 'IMG') {
+        textContainer.appendChild(content.firstChild);
+    } else {
+        textContainer.innerHTML += content.innerHTML;
+    }
+
+    if (username && new RegExp(`@${escapeRegExp(username)}\\b`, 'i').test(message.msg)) {
+        wrapper.classList.add('mentionMessage');
+    }
+
+    const replyButton = document.createElement('button');
+    replyButton.className = 'replyButton';
+    replyButton.type = 'button';
+    replyButton.innerHTML = '<i class="fa-solid fa-reply"></i>';
+    replyButton.addEventListener('click', (event) => {
+        event.stopPropagation();
+        setReplyTarget(message);
+    });
+
+    const messageRow = document.createElement('div');
+    messageRow.className = 'messageRow';
+    messageRow.appendChild(textContainer);
+    messageRow.appendChild(replyButton);
+    wrapper.appendChild(messageRow);
+    return wrapper;
+}
+
+function createMessageGroupElement(group) {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'message-group';
+    wrapper.dataset.sender = group.sender;
+
+    const pfpDiv = document.createElement('div');
+    pfpDiv.className = 'pfp';
+    const img = document.createElement('img');
+    img.src = group.pfp;
+    img.draggable = false;
+    img.style.filter = 'drop-shadow(0 0 5px rgba(0, 0, 0, 0.5))';
+    img.onerror = function() {
+        this.src = 'https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png';
+    };
+    pfpDiv.appendChild(img);
+
+    const container = document.createElement('div');
+    container.className = 'messageContainer';
+
+    const header = document.createElement('div');
+    header.className = 'usernameAndBadges';
+
+    const usernameDiv = document.createElement('div');
+    usernameDiv.className = 'username';
+    usernameDiv.innerHTML = `${escapeHTML(group.sender)} <span class="timestamp" style="font-size: 10px;">${formatTimestamp(group.items[0].timestamp)}</span>`;
+
+    const badgesDiv = document.createElement('div');
+    badgesDiv.className = 'badges';
+    badgesDiv.innerHTML = (group.badges || []).map(badge => `<img src="${escapeHTML(badge.image)}" draggable="false" class="badge" />`).join('');
+
+    header.appendChild(usernameDiv);
+    header.appendChild(badgesDiv);
+
+    const groupedMessages = document.createElement('div');
+    groupedMessages.className = 'groupedMessages';
+    group.items.forEach(message => groupedMessages.appendChild(createGroupedMessageItem(message)));
+
+    container.appendChild(header);
+    container.appendChild(groupedMessages);
+    wrapper.appendChild(pfpDiv);
+    wrapper.appendChild(container);
+
+    return wrapper;
+}
+
+function appendMessageToDOM(message) {
+    const messagesContainer = ge('chatContainer');
+    const lastGroup = messagesContainer.lastElementChild;
+    const lastSender = lastGroup?.dataset?.sender;
+
+    if (lastSender === message.sender) {
+        const groupedMessages = lastGroup.querySelector('.groupedMessages');
+        groupedMessages.appendChild(createGroupedMessageItem(message));
+    } else {
+        messagesContainer.appendChild(createMessageGroupElement({
+            sender: message.sender,
+            pfp: message.pfp,
+            badges: message.badges,
+            items: [message]
+        }));
+    }
+
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+function setReplyTarget(message) {
+    const target = message.replyTo || message;
+    currentReply = {
+        sender: target.sender,
+        msg: target.msg,
+        timestamp: target.timestamp
+    };
+    const replyBanner = ge('replyBanner');
+    const replyBannerText = ge('replyBannerText');
+    replyBannerText.innerHTML = `
+        <div class="replyBannerTitle">Replying to @${escapeHTML(currentReply.sender)}</div>
+        <div class="replyBannerMessage">${escapeHTML(currentReply.msg)}</div>
+    `;
+    replyBanner.style.display = 'flex';
+    const sendField = ge('send');
+    sendField.value = 'Reply: ';
+    sendField.placeholder = 'Message';
+    sendField.focus();
+    sendField.setSelectionRange(sendField.value.length, sendField.value.length);
+}
+
+function clearReplyTarget() {
+    currentReply = null;
+    const replyBanner = ge('replyBanner');
+    const replyBannerText = ge('replyBannerText');
+    replyBannerText.textContent = '';
+    replyBanner.style.display = 'none';
+    const sendField = ge('send');
+    sendField.value = '';
+    sendField.placeholder = 'Message';
+}
 
 function openModal(imageSrc) {
     const modal = document.getElementById("imageModal");
@@ -197,10 +355,7 @@ document.addEventListener("paste", (event) => {
                 const imageUrl = event.target.result; 
                 const timestamp = Date.now(); 
                 const chatMessage = { sender: username, msg: imageUrl, badges, pfp, timestamp }; 
-                const messageHTML = createMessageHTML(chatMessage);
-                const messagesContainer = ge("chatContainer");
-                messagesContainer.innerHTML += messageHTML;
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                appendMessageToDOM(chatMessage);
                 socket.emit("message", chatMessage); 
             };
             reader.readAsDataURL(file); 
@@ -209,20 +364,30 @@ document.addEventListener("paste", (event) => {
     }
 });
 
-
+// more message grouping stff duh
 function updateMessages(newMessages) {
-    const messagesContainer = ge("chatContainer");
+    const messagesContainer = ge('chatContainer');
     const fragment = document.createDocumentFragment();
 
+    const grouped = [];
     newMessages.forEach(message => {
-        const messageHTML = document.createElement('div');
-        messageHTML.innerHTML = createMessageHTML(message);
-        fragment.appendChild(messageHTML);
+        const previousGroup = grouped[grouped.length - 1];
+        if (previousGroup && previousGroup.sender === message.sender) {
+            previousGroup.items.push(message);
+        } else {
+            grouped.push({
+                sender: message.sender,
+                pfp: message.pfp,
+                badges: message.badges,
+                items: [message]
+            });
+        }
     });
 
-    messagesContainer.innerHTML = ""; 
-    messagesContainer.appendChild(fragment); 
+    grouped.forEach(group => fragment.appendChild(createMessageGroupElement(group)));
 
+    messagesContainer.innerHTML = '';
+    messagesContainer.appendChild(fragment);
 }
 
 const byte = (str) => new Blob([str]).size;
@@ -254,7 +419,14 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             const timestamp = currentTime;
-            const chatMessage = { sender: username, msg, badges, pfp, timestamp };
+            const chatMessage = {
+                sender: username,
+                msg,
+                badges,
+                pfp,
+                timestamp,
+                replyTo: currentReply ? { sender: currentReply.sender, msg: currentReply.msg, timestamp: currentReply.timestamp } : undefined
+            };
             const lowerCaseMessage = msg.toLowerCase();
             const containsFilteredWord = filteredWords.some(word => lowerCaseMessage.includes(word));
             if (containsFilteredWord) {
@@ -268,12 +440,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 return; 
             }
 
-            const messageHTML = createMessageHTML(chatMessage); 
-            const messagesContainer = ge("chatContainer");
-            messagesContainer.innerHTML += messageHTML;
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            appendMessageToDOM(chatMessage);
             socket.emit("message", chatMessage);
             e.target.value = "";
+            clearReplyTarget();
             lastMessageTime = currentTime;
         }
     });
@@ -286,6 +456,12 @@ document.addEventListener('DOMContentLoaded', function() {
             const messagesContainer = ge("chatContainer");
             messagesContainer.scrollTop = messagesContainer.scrollHeight;  
         }
+    });
+
+    // erm reply stuff
+    const cancelReplyButton = ge('cancelReplyButton');
+    cancelReplyButton?.addEventListener('click', () => {
+        clearReplyTarget();
     });
 
     function adjustInputHeight(input) {

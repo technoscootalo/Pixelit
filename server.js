@@ -153,7 +153,8 @@ io.on("connection", async (socket) => {
         msg: message.msg,
         badges: user ? user.badges : [],
         pfp: user ? user.pfp : "",
-        timestamp: timestamp 
+        timestamp: timestamp,
+        replyTo: message.replyTo
       };
 
       const cookief = socket.handshake.headers.cookie;

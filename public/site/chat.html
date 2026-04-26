@@ -80,13 +80,17 @@
           <img class="modal-content" id="modalImage" style="max-width: 90%; max-height: 90%; margin: auto;">
       </div>
       <div class="inputContainer">
-        <input
-          type="text"
+        <div id="replyBanner" class="replyBanner" style="display: none;">
+          <span id="replyBannerText"></span>
+            <button id="cancelReplyButton" class="cancelReplyButton" type="button"><strong><i class="fa-solid fa-xmark"></i></strong></button>
+        </div>
+        <textarea
           class="sendInput"
           id="send"
-          placeholder="Message"
-          style="font-size: 1.3em;"
-        />
+          placeholder="Type Your Message Here..."
+          style="font-size: 1.3em; resize: none;"
+          rows="2"
+        ></textarea>
       </div>
     </div>
     <script src="/auth/console.js"></script>

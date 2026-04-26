@@ -81,6 +81,7 @@ const users = db.collection("users");
 const badges = db.collection("badges");
 const chatm = db.collection("chat");
 const packs = db.collection("packs");
+const audits = db.collection('audits');
 
 async function hashPassword(password) {
   const saltRounds = 10;
@@ -131,12 +132,15 @@ router.post("/login", async (req, res) => {
     const pass = req.body.password;
     const user = await collection.findOne({ username: name });
 
+    if (!user) {
+      return res.status(401).send("User not found!");
+    }
+
     if (user.banned){
       return res.status(403).send(`Your account is currently banned. Reason: ${user.banReason || "No reason provided."}`);
     }
 
-    if (user) {
-      if (await validatePassword(pass, user.password)) {
+    if (await validatePassword(pass, user.password)) {
         req.session.loggedIn = true;
         req.session.username = user.username;
         req.session.tokens = user.tokens;
@@ -154,9 +158,6 @@ router.post("/login", async (req, res) => {
       } else {
         res.status(401).send("Username or Password is incorrect!");
       }
-    } else {
-      res.status(401).send("User not found!");
-    }
   } catch (err) {
     console.error(err);
     res.status(500).send("Server error!");
@@ -1242,6 +1243,30 @@ router.get("/getNotifications", async (req, res) => {
   res.json({ success: true, notifications: user.notifications || [] });
 });
 
+router.post('/getUserStats', async (req, res) => {
+  if (!req.session || !req.session.loggedIn) {
+    return res.status(401).json({ success: false, message: 'You must be logged in.' });
+  }
+  const { username } = req.body;
+  if (!username) {
+    return res.status(400).json({ success: false, message: 'Username is required.' });
+  }
+  const user = await users.findOne({ username });
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found.' });
+  }
+  
+  const userStats = {
+    username: user.username,
+    pfp: user.pfp,
+    role: user.role,
+    tokens: user.tokens,
+    stats: user.stats,
+    badges: user.badges
+  };
+  res.json({ success: true, user: userStats });
+});
+
 router.post('/storeCheckout', async (req, res) => {
   if (!req.session || !req.session.username) {
     return res.status(401).json({ error: 'You must be logged in.' });
@@ -1295,6 +1320,7 @@ router.post('/storeWebhook', bodyParser.raw({ type: 'application/json' }), async
   }
   res.json({ received: true });
 });
+
 
 router.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'public', 'site', '404.html'));

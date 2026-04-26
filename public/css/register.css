@@ -203,8 +203,8 @@ body {
   text-align: center;
 }
 
-.body-bg-color {
-  background-color: #6d0180;
+.body-bg-color { 
+  background: #6d0180;
 }
 
 .spacer {

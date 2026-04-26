@@ -13,6 +13,7 @@
       <title>Pixelit</title>
     </head>
   <body class="body-bg-color">
+    <div class="snw"></div>
     <div id="loadingModal" class="overlay-container" style="display: none;">
         <div class="overlay-content">
             <img src="https://izumiihd.github.io/pixelitcdn/assets/img/blooks/Miscellaneous/pixelit2025.png" class="spinner" alt="Loading..." />
@@ -48,28 +49,18 @@
       </h2>
       <br />
       <img src="https://izumiihd.github.io/pixelitcdn/assets/img/home/homeBlooks.png" alt="Home Blooks" draggable="false" class="float-img" onclick="window.location.href='/register';"/>
+      <br />
       <div id="pronunciation" class="pronunciation">
         <i class="fa-solid fa-volume-up pronunciation-icon"></i><span class="pronunciation-text"> Pronunciation ("Pixel-it")</span>
       </div>
-      <div id="socials" class="socials">
-        <a href="https://discord.gg/pixelit" class="social-link" style="color: #5865F2;">
-          <i class="fa-brands fa-discord"></i>
-        </a>
-        <a href="https://github.com/IzumiiHD/Pixelit-BPS" class="social-link" style="color: #fff;">
-          <i class="fa-brands fa-github"></i>
-        </a>
-        <a href="https://www.reddit.com/r/Pixelit/" class="social-link" style="color: #FF4500;">
-          <i class="fa-brands fa-reddit"></i>
-        </a>
-      </div>
-      <h3 class="terms-of-service">
-        <a href="/tos" style="color: #fff;">Terms Of Service </a>
-      </h3>
+      <script type="module">
+        import { displayVersion } from '/javascript/versionDisplay.js';
+        document.addEventListener('DOMContentLoaded', displayVersion);
+      </script>
     </center>
-    <script type="module">
-      import { displayVersion } from '/javascript/versionDisplay.js';
-      document.addEventListener('DOMContentLoaded', displayVersion);
-    </script>
+    <h3 class="tos" style="text-decoration: none;">
+      <a href="/tos" class="tos" >Terms of Service</a>
+    </h3>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <script src="/javascript/home.js"></script>
     <script src="/auth/console.js"></script>

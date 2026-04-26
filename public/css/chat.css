@@ -158,6 +158,7 @@ body {
 
 .chatContainer{
   width: 100%;
+  padding: 2px 6px;
   overflow: auto;
   position: relative;
   overflow-y: scroll;
@@ -174,27 +175,28 @@ body {
 }
 
 .message {
-  width: 100%;
+  width: auto;
   height: auto;
   display: flex;
   font-size: 12px;
   justify-content: left;
   align-items: center;
-  margin-left: 6px;
+  margin-left: 0;
   gap: 10px;
   cursor: pointer;
   position: relative;
 }
 
 .pfp img{
-  width: 65px;
-  height: auto;
-  border-radius: 5px;
+  width: 55px;
+  height: 55px;
+  object-fit: cover;
+  border-radius: 8px;
   transition: transform 0.2s ease-in-out;
 }
 
 .pfp img:hover {
-  transform: scale(0.9);
+  transform: scale(0.95);
 }
 
 .pfp img:mouseout {
@@ -210,7 +212,8 @@ body {
 }
 
 .username{
-  font-size: 20px;
+  font-size: 25px;
+  line-height: 1.2;
 }
 
 .chatImages {
@@ -218,7 +221,7 @@ body {
   margin-bottom: 0px;
   object-position: bottom; 
   object-fit: scale-down;
-  max-height: 70px;
+  max-height: 80px;
   max-width: 50vw;
   break-after: always;
   cursor: pointer;
@@ -241,15 +244,167 @@ body {
   gap: 0px;
   justify-content: flex-start; 
 }
-.usernameAndBadges{
+.message-group {
+  width: auto;
+  max-width: 78%;
   display: flex;
-  gap: 5px;
+  font-size: 23px;
+  justify-content: left;
+  align-items: flex-start;
+  margin-left: 0;
+  gap: 10px;
+  position: relative;
+  margin-bottom: 6px;
 }
-.badge{
-  width: 25px;
+.groupedMessages {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  margin-top: 0px;
+}
+.groupedMessage {
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  min-height: 18px;
+  transition: opacity 0.15s ease, background-color 0.15s ease;
+}
+.groupedMessage.mentionMessage {
+  background-color: #FFEA00;
+  border-radius: 5px;
+}
+.groupedMessage.mentionMessage .messageText {
+  background-color: transparent;
+}
+
+.groupedMessage:hover {
+  opacity: 0.92;
+  background-color: rgba(255, 255, 255, 0.04);
+}
+.messageRow {
+  display: flex;
+  width: 100%;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 4px;
+}
+.messageText {
+  flex: 1;
+  min-width: 0;
+}
+.replyButton {
+  padding: 12px 18px;
+  border-radius: 5px;
+  color: white;
+  cursor: pointer;
+  font-size: 14px;
+  border: none;
+  background: transparent;
+  font-family: Pixelify Sans;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+  opacity: 0;
+  visibility: hidden;
+}
+.groupedMessage:hover .replyButton {
+  opacity: 1;
+  visibility: visible;
+}
+.mention {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+  border-radius: 0;
+  font-weight: inherit;
+}
+.replyPreview {
+  font-size: 12px;
+  color: #d0d0d0;
+  border-left: 2px solid rgba(255,255,255,0.35);
+  padding-left: 10px;
+  margin-bottom: 2px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.replyBanner {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 12px 12px 12px;
+  margin-bottom: 8px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  color: #fff;
+}
+.replyBannerTitle {
+  font-size: 13px;
+  font-weight: 700;
+}
+.replyBannerMessage {
+  font-size: 13px;
+  color: #dcdcdc;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+.cancelReplyButton {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+.cancelReplyButton {
+  transition: color 0.3s ease;
+}
+
+.cancelReplyButton:hover {
+  color: red;
+}
+.messageText {
+  word-wrap: break-word !important; 
+  overflow-wrap: break-word !important; 
+  white-space: normal !important;
+  line-height: 1.05;
+  font-size: 18px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+}
+.messageText p {
+  margin: 0;
+  padding: 0;
+}
+.messageText p + p {
+  margin-top: 0;
+}
+.usernameAndBadges {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.badge {
+  width: 28px;
   height: auto;
 }
-.badges{
+.badges {
   display: flex;
   flex-direction: row;
   gap: 3px;
