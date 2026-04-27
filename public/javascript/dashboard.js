@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .then(response => response.json())
       .then(data => {
+        if (data.username) socket.emit('joinUserRoom', { username: data.username });
         if (data.username.toLowerCase() === searchUsername.toLowerCase()) {
           window.location.href = '/dashboard';
         } else {
@@ -93,6 +94,7 @@ function fetchCurrentUserData() {
     })
     .then((data) => {
       displayUserProfile(data, false);
+      if (data.username) socket.emit('joinUserRoom', { username: data.username });
     })
     .catch((error) => {
         console.error("Error fetching user data:", error);
@@ -203,7 +205,7 @@ function openPfpChangeModal(packs) {
     box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
     padding: 20px;
     border-radius: 8px;
-    width: 93%;
+    width: 90%;
     max-width: 950px
     max-height: 100vh;
     overflow-y: auto;
@@ -240,13 +242,12 @@ function openPfpChangeModal(packs) {
             background-color: #6f057a;
             box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
           `;
-            pixelItem.onmouseover = () => {
+          pixelItem.onmouseover = () => {
             pixelItem.style.transform = 'scale(1.1)';
-            pixelItem.style.transition = 'transform 0.15s ease-out';
-            };
-            pixelItem.onmouseout = () => {
+          };
+          pixelItem.onmouseout = () => {
             pixelItem.style.transform = 'scale(1)';
-            };
+          };
 
           const img = document.createElement('img');
           img.src = blook.imageUrl;
@@ -316,21 +317,9 @@ function openPfpChangeModal(packs) {
   `;
   closeButton.onmouseover = () => {
     closeButton.style.boxShadow = 'inset 0 -0.5vw #800000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    closeButton.style.transform = 'translateY(-5px)';
-    closeButton.style.transition = 'transform 0.15s ease-out';
   };
-
   closeButton.onmouseout = () => {
     closeButton.style.boxShadow = 'inset 0 -0.365vw #800000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    closeButton.style.transform = 'translateY(0)';
-  };
-
-  closeButton.onmousedown = () => {
-    closeButton.style.transform = 'translateY(0)';
-  };
-
-  closeButton.onmouseup = () => {
-    closeButton.style.transform = 'translateY(-5px)';
   };
   closeButton.onclick = () => document.body.removeChild(modal);
   modalContent.appendChild(closeButton);
@@ -359,6 +348,12 @@ function updateButtonsForViewingMode(isOther, username) {
     
     const buttonContainer = document.querySelector('.button_container');
     if (buttonContainer) {
+      const tradeButton = document.createElement('button');
+      tradeButton.className = 'button tradeButton';
+      tradeButton.innerHTML = '<i class="fa-solid fa-right-left" style="margin-right: 10px; font-size: 16px;"></i>Trade';
+      tradeButton.onclick = () => sendTradeRequest(username);
+      buttonContainer.appendChild(tradeButton);
+
       const backButton = document.createElement('button');
       backButton.className = 'button';
       backButton.innerHTML = '<i class="fa-solid fa-arrow-left" style="margin-right: 8px;"></i>Back';
@@ -369,6 +364,222 @@ function updateButtonsForViewingMode(isOther, username) {
     }
   }
 }
+
+function sendTradeRequest(recipient) {
+  fetch('/user', { method: 'GET', credentials: 'include' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.username) {
+        socket.emit('joinUserRoom', { username: data.username });
+        socket.emit('tradeRequest', { sender: data.username, recipient });
+        showTradeToast(`Trade request sent to ${recipient}!`, 'info');
+      }
+    });
+}
+
+function showTradeToast(message, type = 'info') {
+  const existing = document.getElementById('trade-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'trade-toast';
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #6f057a;
+    box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 15px 20px;
+    border-radius: 5px;
+    font-family: 'Pixelify Sans';
+    font-size: 16px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+  `;
+  toast.innerHTML = `<i class="fa-solid ${type === 'info' ? 'fa-circle-info' : 'fa-triangle-exclamation'}" style="font-size: 20px;"></i><span>${message}</span>`;
+  document.body.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transition = 'opacity 0.5s';
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
+}
+
+function showTradeRequestToast(sender) {
+  const existing = document.getElementById('trade-request-toast');
+  if (existing) existing.remove();
+
+  const toast = document.createElement('div');
+  toast.id = 'trade-request-toast';
+  toast.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #6f057a;
+    box-shadow: inset 0 -0.365vw #61056b, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 20px;
+    border-radius: 5px;
+    font-family: 'Pixelify Sans';
+    font-size: 16px;
+    z-index: 9999;
+    width: 300px;
+    animation: slideIn 0.3s ease;
+  `;
+
+  const title = document.createElement('div');
+  title.textContent = `${sender} sent you a trade request!`;
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '15px';
+  toast.appendChild(title);
+
+  const btnContainer = document.createElement('div');
+  btnContainer.style.display = 'flex';
+  btnContainer.style.gap = '10px';
+
+  const acceptBtn = document.createElement('button');
+  acceptBtn.textContent = 'Accept';
+  acceptBtn.style.cssText = `
+    flex: 1;
+    background-color: green;
+    box-shadow: inset 0 -0.265vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Pixelify Sans';
+    font-size: 18px;
+    font-weight: bold;
+  `;
+  acceptBtn.onclick = () => {
+    fetch('/user', { method: 'GET', credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        socket.emit('tradeResponse', { sender, recipient: data.username, accepted: true });
+        toast.remove();
+      });
+  };
+
+  const declineBtn = document.createElement('button');
+  declineBtn.textContent = 'Decline';
+  declineBtn.style.cssText = `
+    flex: 1;
+    background-color: #b30000;
+    box-shadow: inset 0 -0.265vw #800000, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-family: 'Pixelify Sans';
+    font-size: 18px;
+    font-weight: bold;
+  `;
+  declineBtn.onclick = () => {
+    fetch('/user', { method: 'GET', credentials: 'include' })
+      .then(r => r.json())
+      .then(data => {
+        socket.emit('tradeResponse', { sender, recipient: data.username, accepted: false });
+        toast.remove();
+      });
+  };
+
+  btnContainer.appendChild(acceptBtn);
+  btnContainer.appendChild(declineBtn);
+  toast.appendChild(btnContainer);
+  document.body.appendChild(toast);
+}
+
+socket.on('tradeRequest', (data) => {
+  showTradeRequestToast(data.sender);
+});
+
+socket.on('tradeAccepted', (data) => {
+  window.location.href = `/trade?id=${encodeURIComponent(data.tradeId)}`;
+});
+
+socket.on('tradeDeclined', (data) => {
+  const existing = document.getElementById('trade-declined-modal');
+  if (existing) existing.remove();
+
+  const modal = document.createElement('div');
+  modal.id = 'trade-declined-modal';
+  modal.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+  `;
+
+  const content = document.createElement('div');
+  content.style.cssText = `
+    background-color: #5e046e;
+    box-shadow: inset 0 -0.365vw #53055c, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    padding: 30px;
+    border-radius: 10px;
+    text-align: center;
+    width: 350px;
+    font-family: 'Pixelify Sans';
+    color: white;
+  `;
+
+  const icon = document.createElement('div');
+  icon.innerHTML = '<i class="fa-solid fa-circle-xmark" style="font-size: 48px; color: #ff5252;"></i>';
+  icon.style.marginBottom = '15px';
+  content.appendChild(icon);
+
+  const title = document.createElement('div');
+  title.textContent = 'Trade Declined';
+  title.style.fontSize = '22px';
+  title.style.fontWeight = 'bold';
+  title.style.marginBottom = '10px';
+  content.appendChild(title);
+
+  const msg = document.createElement('div');
+  msg.textContent = `${data.by} declined your trade request.`;
+  msg.style.fontSize = '16px';
+  msg.style.marginBottom = '20px';
+  content.appendChild(msg);
+
+  const btn = document.createElement('button');
+  btn.textContent = 'Return to Dashboard';
+  btn.style.cssText = `
+    background-color: #1976d2;
+    box-shadow: inset 0 -0.265vw #0d47a1, 3px 3px 15px rgba(0, 0, 0, 0.6);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: 'Pixelify Sans';
+    font-size: 16px;
+    font-weight: bold;
+    width: 100%;
+  `;
+  btn.onclick = () => {
+    modal.remove();
+    window.location.href = '/dashboard';
+  };
+  content.appendChild(btn);
+
+  modal.appendChild(content);
+  document.body.appendChild(modal);
+});
+
+socket.on('tradeError', (msg) => {
+  showTradeToast(msg, 'error');
+});
 
 function updateTokens() {
   socket.emit("getTokens", sessionStorage.username);
@@ -487,23 +698,13 @@ function openViewUserPopup() {
     transition: box-shadow 0.3s ease;
     margin-left: 60px;
   `;
+
   viewButton.onmouseover = () => {
     viewButton.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    viewButton.style.transform = 'translateY(-5px)';
-    viewButton.style.transition = 'transform 0.15s ease-out';
   };
 
   viewButton.onmouseout = () => {
     viewButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    viewButton.style.transform = 'translateY(0)';
-  };
-
-  viewButton.onmousedown = () => {
-    viewButton.style.transform = 'translateY(0)';
-  };
-
-  viewButton.onmouseup = () => {
-    viewButton.style.transform = 'translateY(-5px)';
   };
 
   viewButton.onclick = () => {
@@ -529,27 +730,16 @@ function openViewUserPopup() {
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: transform 0.2s ease-in, box-shadow 0.3s ease;
+    transition: box-shadow 0.3s ease;
     margin-right: 60px;
   `;
 
   cancelButton.onmouseover = () => {
-    cancelButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    cancelButton.style.transform = 'translateY(-5px)';
-    cancelButton.style.transition = 'transform 0.15s ease-out';
+    cancelButton.style.boxShadow = 'inset 0 -0.5vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   cancelButton.onmouseout = () => {
-    cancelButton.style.boxShadow = 'inset 0 -0.3vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    cancelButton.style.transform = 'translateY(0)';
-  };
-
-  cancelButton.onmousedown = () => {
-    cancelButton.style.transform = 'translateY(0)';
-  };
-
-  cancelButton.onmouseup = () => {
-    cancelButton.style.transform = 'translateY(-5px)';
+    cancelButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   cancelButton.onclick = () => {

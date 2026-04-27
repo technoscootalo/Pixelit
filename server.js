@@ -34,9 +34,7 @@ app.use((req, res, next) => {
 
 app.use((req, res, next) => {
   if (req.method === 'GET' && !path.extname(req.path)) {
-
     const siteHtml = path.join(__dirname, 'public', 'site', req.path + '.html');
-
     const publicHtml = path.join(__dirname, 'public', req.path + '.html');
     if (fs.existsSync(siteHtml)) {
       return res.sendFile(siteHtml);
@@ -129,10 +127,20 @@ const port = process.env.PORT || 3000;
 
 const encpass = process.env["encpass"];
 
+const activeTrades = new Map();
+const pendingTradeRequests = new Map();
+
 io.on("connection", async (socket) => {
   console.log("A user connected");
   const messages = await chatm.find().toArray();
   socket.emit("chatupdate", messages);
+
+  socket.on("joinUserRoom", (data) => {
+    const { username } = data;
+    if (username) {
+      socket.join(`user_${username}`);
+    }
+  });
 
   socket.on("message", async (message) => {
     const username = message.sender;
@@ -222,6 +230,145 @@ io.on("connection", async (socket) => {
   socket.on("getAuditLogs", async () => {
     const logs = await auditCollection.find().toArray();
     socket.emit("auditLogs", logs);
+  });
+
+  socket.on("tradeRequest", async (data) => {
+    const { recipient, sender } = data;
+    if (!recipient || !sender) return;
+    const recipientUser = await users.findOne({ username: recipient });
+    if (!recipientUser) {
+      return socket.emit("tradeError", "User not found.");
+    }
+    pendingTradeRequests.set(recipient, { sender, senderSocketId: socket.id });
+    socket.to(`user_${recipient}`).emit("tradeRequest", { sender });
+  });
+
+  socket.on("tradeResponse", async (data) => {
+    const { sender, recipient, accepted } = data;
+    if (!sender || !recipient) return;
+    const requestInfo = pendingTradeRequests.get(recipient);
+    pendingTradeRequests.delete(recipient);
+    if (accepted) {
+      const tradeId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+      const roomId = [sender, recipient].sort().join("_");
+      socket.join(roomId);
+      activeTrades.set(tradeId, {
+        tradeId,
+        roomId,
+        sender,
+        recipient,
+        senderReady: false,
+        recipientReady: false,
+        senderOffer: { tokens: 0, pixels: [] },
+        recipientOffer: { tokens: 0, pixels: [] },
+        chat: []
+      });
+      if (requestInfo && requestInfo.senderSocketId) {
+        const senderSocket = io.sockets.sockets.get(requestInfo.senderSocketId);
+        if (senderSocket) {
+          senderSocket.emit("tradeAccepted", { tradeId });
+        } else {
+          io.to(`user_${sender}`).emit("tradeAccepted", { tradeId });
+        }
+      } else {
+        io.to(`user_${sender}`).emit("tradeAccepted", { tradeId });
+      }
+      socket.emit("tradeAccepted", { tradeId });
+    } else {
+      io.to(`user_${sender}`).emit("tradeDeclined", { by: recipient });
+    }
+  });
+
+  io.on("connection", (socket) => {
+
+  socket.on("joinTradeRoom", async ({ tradeId }) => {
+    const trade = activeTrades.get(tradeId);
+    if (!trade) return;
+
+    socket.join(trade.roomId);
+
+    const messages = await db.collection("tradeChats")
+      .find({ tradeId })
+      .sort({ timestamp: 1 })
+      .limit(100)
+      .toArray();
+
+    socket.emit("tradeChatHistory", messages);
+  });
+
+
+  socket.on("tradeChat", async (data) => {
+    const { tradeId, sender, msg } = data;
+    const timestamp = Date.now();
+
+    const trade = activeTrades.get(tradeId);
+    if (!trade) return;
+
+    const message = {
+      tradeId,
+      roomId: trade.roomId,
+      sender,
+      recipient: trade.otherUser, 
+      msg,
+      timestamp
+    };
+
+    try {
+      await db.collection("tradeChats").insertOne(message);
+
+      io.to(trade.roomId).emit("tradeChat", message);
+
+    } catch (err) {
+      console.error("Chat save error:", err);
+    }
+  });
+
+});
+
+  socket.on("tradeUpdate", (data) => {
+    const { tradeId, username, offer } = data;
+    const trade = activeTrades.get(tradeId);
+    if (!trade) return;
+    if (trade.sender === username) {
+      trade.senderOffer = offer;
+    } else if (trade.recipient === username) {
+      trade.recipientOffer = offer;
+    }
+    trade.senderReady = false;
+    trade.recipientReady = false;
+    io.to(trade.roomId).emit("tradeUpdate", { username, offer });
+    io.to(trade.roomId).emit("tradeResetReady");
+  });
+
+  socket.on("tradeAccept", async (data) => {
+    const { tradeId, username } = data;
+    const trade = activeTrades.get(tradeId);
+    if (!trade) return;
+    if (trade.sender === username) trade.senderReady = true;
+    if (trade.recipient === username) trade.recipientReady = true;
+    socket.to(trade.roomId).emit("tradeAccept", { username });
+
+    if (trade.senderReady && trade.recipientReady) {
+      io.to(trade.roomId).emit("tradeExecute");
+    }
+  });
+
+  socket.on("tradeCancel", (data) => {
+    const { tradeId, username } = data;
+    const trade = activeTrades.get(tradeId);
+    if (trade) {
+      io.to(trade.roomId).emit("tradeCancelled", { by: username });
+      activeTrades.delete(tradeId);
+    }
+  });
+
+  socket.on("tradeNotifySuccess", (data) => {
+    const { tradeId } = data;
+    const trade = activeTrades.get(tradeId);
+    if (trade) {
+      io.to(trade.roomId).emit("tradeSuccess");
+      activeTrades.delete(tradeId);
+    }
   });
 
   socket.on("disconnect", () => {

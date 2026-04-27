@@ -161,6 +161,8 @@ function addBadgeToUser(badge) {
     });
 }
 
+// Badge order [OG, ]
+
 function levenshteinDistance(a, b) {
     const matrix = [];
 

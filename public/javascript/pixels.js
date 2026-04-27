@@ -256,22 +256,12 @@ function sellBlook() {
   `;
 
   sellButtonModal.onmouseover = () => {
-    sellButtonModal.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    sellButtonModal.style.transform = 'translateY(-5px)';
-    sellButtonModal.style.transition = 'transform 0.15s ease-out';
+    sellButtonModal.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   sellButtonModal.onmouseout = () => {
-    sellButtonModal.style.boxShadow = 'inset 0 -0.3vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    sellButtonModal.style.transform = 'translateY(0)';
-    sellButtonModal.style.transition = 'transform 0.2s ease-in';
+    sellButtonModal.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
-
-  sellButtonModal.onmousedown = () => {
-    sellButtonModal.style.transform = 'translateY(0)';
-  };
-
-  sellButtonModal.style.transition = 'transform 0.2s ease-in';
     const spaceEl = document.createElement('span');
     spaceEl.innerHTML = '&nbsp;';
     spaceEl.style.marginLeft = '10px';
@@ -292,22 +282,12 @@ function sellBlook() {
   `;
 
   cancelButtonModal.onmouseover = () => {
-    cancelButtonModal.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    cancelButtonModal.style.transform = 'translateY(-5px)';
-    cancelButtonModal.style.transition = 'transform 0.15s ease-out';
+    cancelButtonModal.style.boxShadow = 'inset 0 -0.5vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   cancelButtonModal.onmouseout = () => {
-    cancelButtonModal.style.boxShadow = 'inset 0 -0.3vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    cancelButtonModal.style.transform = 'translateY(0)';
-    cancelButtonModal.style.transition = 'transform 0.2s ease-in';
+    cancelButtonModal.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
-
-  cancelButtonModal.onmousedown = () => {
-    cancelButtonModal.style.transform = 'translateY(0)';
-  };
-
-  cancelButtonModal.style.transition = 'transform 0.2s ease-in';
 
   
   const errorMessage = document.createElement('div');
@@ -507,22 +487,12 @@ function changeProfilePicture(blookName, imageUrl, packName) {
   `;
 
   yesButton.onmouseover = () => {
-    yesButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    yesButton.style.transform = 'translateY(-5px)';
-    yesButton.style.transition = 'transform 0.15s ease-out';
+    yesButton.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   yesButton.onmouseout = () => {
-    yesButton.style.boxShadow = 'inset 0 -0.3vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    yesButton.style.transform = 'translateY(0)';
-    yesButton.style.transition = 'transform 0.2s ease-in';
+    yesButton.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
-
-  yesButton.onmousedown = () => {
-    yesButton.style.transform = 'translateY(0)';
-  };
-
-  yesButton.style.transition = 'transform 0.2s ease-in';
 
   const noButton = document.createElement('button');
   noButton.textContent = 'No';
@@ -540,22 +510,12 @@ function changeProfilePicture(blookName, imageUrl, packName) {
   `;
 
   noButton.onmouseover = () => {
-    noButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    noButton.style.transform = 'translateY(-5px)';
-    noButton.style.transition = 'transform 0.15s ease-out';
+    noButton.style.boxShadow = 'inset 0 -0.5vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
 
   noButton.onmouseout = () => {
-    noButton.style.boxShadow = 'inset 0 -0.3vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-    noButton.style.transform = 'translateY(0)';
-    noButton.style.transition = 'transform 0.2s ease-in';
+    noButton.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
   };
-
-  noButton.onmousedown = () => {
-    noButton.style.transform = 'translateY(0)';
-  };
-
-  noButton.style.transition = 'transform 0.2s ease-in';
 
   modalContent.appendChild(yesButton);
   modalContent.appendChild(noButton);
@@ -671,22 +631,12 @@ giftButton.addEventListener("click", () => {
     `;
 
     giftButtonModal.onmouseover = () => {
-      giftButtonModal.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-      giftButtonModal.style.transform = 'translateY(-5px)';
-      giftButtonModal.style.transition = 'transform 0.15s ease-out';
+      giftButtonModal.style.boxShadow = 'inset 0 -0.5vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
     };
 
     giftButtonModal.onmouseout = () => {
-      giftButtonModal.style.boxShadow = 'inset 0 -0.3vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-      giftButtonModal.style.transform = 'translateY(0)';
-      giftButtonModal.style.transition = 'transform 0.2s ease-in';
+      giftButtonModal.style.boxShadow = 'inset 0 -0.365vw #006400, 3px 3px 15px rgba(0, 0, 0, 0.6)';
     };
-
-    giftButtonModal.onmousedown = () => {
-      giftButtonModal.style.transform = 'translateY(0)';
-    };
-
-    giftButtonModal.style.transition = 'transform 0.2s ease-in';
 
   giftButtonModal.onclick = async () => {
       const recipient = recipientInput.value;
@@ -768,22 +718,12 @@ giftButton.addEventListener("click", () => {
     `;
 
     cancelButtonModal.onmouseover = () => {
-      cancelButtonModal.style.boxShadow = 'inset 0 -0.365vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-      cancelButtonModal.style.transform = 'translateY(-5px)';
-      cancelButtonModal.style.transition = 'transform 0.15s ease-out';
+      cancelButtonModal.style.boxShadow = 'inset 0 -0.5vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
     };
 
     cancelButtonModal.onmouseout = () => {
-      cancelButtonModal.style.boxShadow = 'inset 0 -0.3vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
-      cancelButtonModal.style.transform = 'translateY(0)';
-      cancelButtonModal.style.transition = 'transform 0.2s ease-in';
+      cancelButtonModal.style.boxShadow = 'inset 0 -0.3655vw #b30000, 3px 3px 15px rgba(0, 0, 0, 0.6)';
     };
-
-    cancelButtonModal.onmousedown = () => {
-      cancelButtonModal.style.transform = 'translateY(0)';
-    };
-
-    cancelButtonModal.style.transition = 'transform 0.2s ease-in';
 
     cancelButtonModal.onclick = () => {
         document.body.removeChild(modal);
