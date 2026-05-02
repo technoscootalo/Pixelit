@@ -348,11 +348,13 @@ function updateButtonsForViewingMode(isOther, username) {
     
     const buttonContainer = document.querySelector('.button_container');
     if (buttonContainer) {
+      /* 
       const tradeButton = document.createElement('button');
       tradeButton.className = 'button tradeButton';
       tradeButton.innerHTML = '<i class="fa-solid fa-right-left" style="margin-right: 10px; font-size: 16px;"></i>Trade';
       tradeButton.onclick = () => sendTradeRequest(username);
       buttonContainer.appendChild(tradeButton);
+      */
 
       const backButton = document.createElement('button');
       backButton.className = 'button';

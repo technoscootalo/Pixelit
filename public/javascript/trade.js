@@ -1,52 +1,5 @@
 const socket = io();
 
-const RARITY_COLORS = {
-  uncommon: "#4bc22e",
-  rare: "#4f60ff",
-  epic: "#be0000",
-  legendary: "#ff910f",
-  chroma: "#00ccff",
-  mystical: "#9935dd"
-};
-
-function getRarityColor(rarity) {
-  return RARITY_COLORS[(rarity || '').toLowerCase()] || '#999';
-}
-
-function renderMyOffer() {
-  const grid = ge('your-offer-grid');
-  grid.innerHTML = '';
-  myOffer.pixels.forEach(p => {
-    const color = getRarityColor(p.rarity);
-    const div = document.createElement('div');
-    div.className = 'offer-item';
-    div.innerHTML = `
-      <img src="${p.imageUrl}" alt="${p.name}" onerror="this.src='https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png'" />
-      <span class="qty-badge" style="background-color: ${color};">${p.quantity}</span>
-      <div class="offer-name">${p.name}</div>
-    `;
-    div.onclick = () => removeFromOffer(p.name);
-    grid.appendChild(div);
-  });
-}
-
-function renderTheirOffer() {
-  const grid = ge('their-offer-grid');
-  grid.innerHTML = '';
-  theirOffer.pixels.forEach(p => {
-    const color = getRarityColor(p.rarity);
-    const div = document.createElement('div');
-    div.className = 'offer-item';
-    div.innerHTML = `
-      <img src="${p.imageUrl || 'https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png'}" alt="${p.name}" />
-      <span class="qty-badge" style="background-color: ${color};">${p.quantity}</span>
-      <div class="offer-name">${p.name}</div>
-    `;
-    grid.appendChild(div);
-  });
-  ge('their-tokens').textContent = theirOffer.tokens;
-}
-
 const urlParams = new URLSearchParams(window.location.search);
 const tradeId = urlParams.get('id');
 

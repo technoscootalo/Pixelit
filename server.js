@@ -21,7 +21,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
   name: "cookie",
-  secret: process.env['cookieSecret'],
+  secret: process.env['cookieSecret'] || 'temp-super-secret-key-for-pixelit-local-dev-change-in-prod',
   resave: false,
   saveUninitialized: true,
   cookie: { maxAge: 3 * 24 * 60 * 60 * 1000 },
@@ -279,51 +279,16 @@ io.on("connection", async (socket) => {
     }
   });
 
-  io.on("connection", (socket) => {
-
-  socket.on("joinTradeRoom", async ({ tradeId }) => {
+  socket.on("joinTradeRoom", (data) => {
+    const { tradeId, username } = data;
     const trade = activeTrades.get(tradeId);
-    if (!trade) return;
-
-    socket.join(trade.roomId);
-
-    const messages = await db.collection("tradeChats")
-      .find({ tradeId })
-      .sort({ timestamp: 1 })
-      .limit(100)
-      .toArray();
-
-    socket.emit("tradeChatHistory", messages);
-  });
-
-
-  socket.on("tradeChat", async (data) => {
-    const { tradeId, sender, msg } = data;
-    const timestamp = Date.now();
-
-    const trade = activeTrades.get(tradeId);
-    if (!trade) return;
-
-    const message = {
-      tradeId,
-      roomId: trade.roomId,
-      sender,
-      recipient: trade.otherUser, 
-      msg,
-      timestamp
-    };
-
-    try {
-      await db.collection("tradeChats").insertOne(message);
-
-      io.to(trade.roomId).emit("tradeChat", message);
-
-    } catch (err) {
-      console.error("Chat save error:", err);
+    if (!trade) {
+      return socket.emit("tradeError", "Trade not found.");
     }
+    socket.join(trade.roomId);
+    socket.join(`user_${username}`);
+    socket.emit("tradeState", trade);
   });
-
-});
 
   socket.on("tradeUpdate", (data) => {
     const { tradeId, username, offer } = data;
@@ -359,6 +324,15 @@ io.on("connection", async (socket) => {
     if (trade) {
       io.to(trade.roomId).emit("tradeCancelled", { by: username });
       activeTrades.delete(tradeId);
+    }
+  });
+
+  socket.on("tradeChat", (data) => {
+    const { tradeId, sender, msg } = data;
+    const trade = activeTrades.get(tradeId);
+    if (trade) {
+      trade.chat.push({ sender, msg, timestamp: Date.now() });
+      io.to(trade.roomId).emit("tradeChat", { sender, msg, timestamp: Date.now() });
     }
   });
 

@@ -1261,7 +1261,10 @@ router.post('/getUserStats', async (req, res) => {
     pfp: user.pfp,
     role: user.role,
     tokens: user.tokens,
-    stats: user.stats,
+    stats: {
+      sent: user.sent || 0,
+      packsOpened: user.packsOpened || 0
+    },
     badges: user.badges
   };
   res.json({ success: true, user: userStats });
