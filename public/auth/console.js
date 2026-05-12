@@ -11,7 +11,13 @@ const socket = io()
 
 socket.on('connect', () => {
   console.log("Socket connection established. Successfully connected to Pixelit");
-  console.log("Running Pixelit version [2.2.4]");
+  console.log("Running Pixelit version [2.3.1]");
+  fetch('/user', { method: 'GET', credentials: 'include' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.username) socket.emit('joinUserRoom', { username: data.username });
+    })
+    .catch(() => {});
 });
 
 socket.on('disconnect', () => {

@@ -1,4 +1,4 @@
-const path = require('path');
+  const path = require('path');
 require('dotenv').config();
 const express = require("express");
 const router = express.Router();
@@ -1261,7 +1261,10 @@ router.post('/getUserStats', async (req, res) => {
     pfp: user.pfp,
     role: user.role,
     tokens: user.tokens,
-    stats: user.stats,
+    stats: {
+      sent: user.sent || 0,
+      packsOpened: user.packsOpened || 0
+    },
     badges: user.badges
   };
   res.json({ success: true, user: userStats });
@@ -1321,6 +1324,174 @@ router.post('/storeWebhook', bodyParser.raw({ type: 'application/json' }), async
   res.json({ received: true });
 });
 
+
+const executedTrades = new Set();
+
+router.post('/executeTrade', async (req, res) => {
+  if (!req.session || !req.session.loggedIn) {
+    return res.status(401).json({ success: false, message: 'You must be logged in.' });
+  }
+
+  const { tradeId, partner } = req.body;
+  if (!tradeId || !partner) {
+    return res.status(400).json({ success: false, message: 'Missing trade data.' });
+  }
+
+  if (executedTrades.has(tradeId)) {
+    return res.json({ success: true, message: 'Trade already completed.' });
+  }
+
+  const myUsername = req.session.username;
+
+  try {
+    const me = await users.findOne({ username: myUsername });
+    const them = await users.findOne({ username: partner });
+
+    if (!me || !them) {
+      return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    const { myOffer, theirOffer } = req.body;
+
+    if (myOffer.tokens > me.tokens) {
+      return res.status(400).json({ success: false, message: 'You do not have enough tokens.' });
+    }
+
+    for (const pixel of myOffer.pixels) {
+      const pack = me.packs.find(p => p.blooks.some(b => b.name === pixel.name));
+      if (!pack) {
+        return res.status(400).json({ success: false, message: `You do not own ${pixel.name}.` });
+      }
+      const blook = pack.blooks.find(b => b.name === pixel.name);
+      if (!blook || blook.owned < pixel.quantity) {
+        return res.status(400).json({ success: false, message: `You do not have enough ${pixel.name}.` });
+      }
+    }
+
+    if (theirOffer.tokens > them.tokens) {
+      return res.status(400).json({ success: false, message: 'Partner does not have enough tokens.' });
+    }
+
+    for (const pixel of theirOffer.pixels) {
+      const pack = them.packs.find(p => p.blooks.some(b => b.name === pixel.name));
+      if (!pack) {
+        return res.status(400).json({ success: false, message: `Partner does not own ${pixel.name}.` });
+      }
+      const blook = pack.blooks.find(b => b.name === pixel.name);
+      if (!blook || blook.owned < pixel.quantity) {
+        return res.status(400).json({ success: false, message: `Partner does not have enough ${pixel.name}.` });
+      }
+    }
+
+    executedTrades.add(tradeId);
+
+    me.tokens -= myOffer.tokens;
+    for (const pixel of myOffer.pixels) {
+      const pack = me.packs.find(p => p.blooks.some(b => b.name === pixel.name));
+      const blook = pack.blooks.find(b => b.name === pixel.name);
+      blook.owned -= pixel.quantity;
+    }
+
+    me.tokens += theirOffer.tokens;
+    for (const pixel of theirOffer.pixels) {
+      let pack = me.packs.find(p => p.name === pixel.parent);
+      if (!pack) {
+        pack = { name: pixel.parent, blooks: [] };
+        me.packs.push(pack);
+      }
+      let blook = pack.blooks.find(b => b.name === pixel.name);
+      if (blook) {
+        blook.owned += pixel.quantity;
+      } else {
+        pack.blooks.push({
+          name: pixel.name,
+          imageUrl: pixel.imageUrl,
+          rarity: pixel.rarity,
+          owned: pixel.quantity,
+          parent: pixel.parent
+        });
+      }
+    }
+
+    them.tokens -= theirOffer.tokens;
+    for (const pixel of theirOffer.pixels) {
+      const pack = them.packs.find(p => p.blooks.some(b => b.name === pixel.name));
+      const blook = pack.blooks.find(b => b.name === pixel.name);
+      blook.owned -= pixel.quantity;
+    }
+
+    them.tokens += myOffer.tokens;
+    for (const pixel of myOffer.pixels) {
+      let pack = them.packs.find(p => p.name === pixel.parent);
+      if (!pack) {
+        pack = { name: pixel.parent, blooks: [] };
+        them.packs.push(pack);
+      }
+      let blook = pack.blooks.find(b => b.name === pixel.name);
+      if (blook) {
+        blook.owned += pixel.quantity;
+      } else {
+        pack.blooks.push({
+          name: pixel.name,
+          imageUrl: pixel.imageUrl,
+          rarity: pixel.rarity,
+          owned: pixel.quantity,
+          parent: pixel.parent
+        });
+      }
+    }
+
+    await users.updateOne({ username: myUsername }, { $set: { tokens: me.tokens, packs: me.packs } });
+    await users.updateOne({ username: partner }, { $set: { tokens: them.tokens, packs: them.packs } });
+
+    const myNotif = { message: `You traded with ${partner} on ${new Date().toLocaleDateString()}`, date: new Date() };
+    const theirNotif = { message: `You traded with ${myUsername} on ${new Date().toLocaleDateString()}`, date: new Date() };
+    await users.updateOne({ username: myUsername }, { $push: { notifications: myNotif } });
+    await users.updateOne({ username: partner }, { $push: { notifications: theirNotif } });
+
+    const tradeLogs = db.collection('tradeLogs');
+    await tradeLogs.insertOne({
+      tradeId,
+      sender: myUsername,
+      recipient: partner,
+      senderOffer: myOffer,
+      recipientOffer: theirOffer,
+      timestamp: new Date()
+    });
+
+    res.json({ success: true, message: 'Trade completed successfully!' });
+  } catch (error) {
+    console.error('Error executing trade:', error);
+    executedTrades.delete(tradeId);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
+
+router.get('/getTradeLogs', async (req, res) => {
+  if (!req.session || !req.session.loggedIn) {
+    return res.status(401).json({ success: false, message: 'You must be logged in.' });
+  }
+
+  const user = await users.findOne({ username: req.session.username });
+  if (!user || !["Owner", "Admin", "Developer", "Community Manager", "Moderator", "Helper"].includes(user.role)) {
+    return res.status(403).json({ success: false, message: 'Access denied.' });
+  }
+
+  const isApiRequest = req.xhr || req.headers.accept?.includes("application/json") || req.headers["sec-fetch-mode"] === "cors";
+  if (!isApiRequest) {
+    return res.status(204).send();
+  }
+
+  try {
+    const tradeLogs = db.collection('tradeLogs');
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const logs = await tradeLogs.find({ timestamp: { $gte: twentyFourHoursAgo } }).sort({ timestamp: -1 }).toArray();
+    res.json({ success: true, logs });
+  } catch (error) {
+    console.error('Error fetching trade logs:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
+  }
+});
 
 router.use((req, res, next) => {
   res.status(404).sendFile(path.join(__dirname, 'public', 'site', '404.html'));
