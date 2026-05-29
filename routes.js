@@ -141,6 +141,20 @@ router.post("/login", async (req, res) => {
     }
 
     if (await validatePassword(pass, user.password)) {
+        if (!user.ipHash) {
+          const xff = req.headers["x-forwarded-for"];
+          const rawIp = (Array.isArray(xff) ? xff[0] : (xff || ""))
+            .split(",")[0]
+            .trim() || req.ip;
+
+          const ipCrypto = require("crypto");
+          const secret = process.env.IP_HASH_SECRET || process.env.cookieSecret || "temp-ip-hash-secret";
+          const ipHash = ipCrypto.createHmac("sha256", secret).update(rawIp).digest("hex");
+
+          await collection.updateOne({ username: user.username }, { $set: { ipHash } });
+          user.ipHash = ipHash;
+        }
+
         req.session.loggedIn = true;
         req.session.username = user.username;
         req.session.tokens = user.tokens;
@@ -151,11 +165,13 @@ router.post("/login", async (req, res) => {
         req.session.claimed = user.claimed;
         req.session.banner = user.banner;
         req.session.badges = user.badges;
+        req.session.ipHash = user.ipHash;
 
         await sendLoginWebhook(user.username);
 
         res.sendStatus(200);
       } else {
+
         res.status(401).send("Username or Password is incorrect!");
       }
   } catch (err) {
@@ -219,39 +235,62 @@ async function sendLogoutWebhook(username) {
 
 router.post("/register", limiter, async (req, res) => {
   try {
+    const crypto = require("crypto");
     const db = client.db(db_name);
     const users = db.collection("users");
-    const userRequests = db.collection("requests");
-    const user = await users.findOne({ username: req.body.username });
 
-    if (user === null) {
-      const request = await userRequests.findOne({
-        username: req.body.username,
-      });
-      if (request === null) {
-        console.log("adding request");
-        const hashedPassword = await hashPassword(req.body.password);
-        const timezone = formatDateTime(localTime);
-        await userRequests.insertOne({
-          username: req.body.username,
-          password: hashedPassword,
-          discord: req.body.discord,
-          age: req.body.age,
-          reason: req.body.reason,
-          date: timezone,
-        });
-        res.sendStatus(200);
-      } else {
-        res.status(500).send("Request has already been sent!");
-      }
-    } else {
-      res.status(500).send("That username already exists!");
+    const xff = req.headers["x-forwarded-for"];
+    const rawIp = (Array.isArray(xff) ? xff[0] : (xff || ""))
+      .split(",")[0]
+      .trim() || req.ip;
+
+    const secret = process.env.IP_HASH_SECRET || process.env.cookieSecret || "temp-ip-hash-secret";
+    const ipHash = crypto.createHmac("sha256", secret).update(rawIp).digest("hex");
+
+    const existingUserFromIp = await users.findOne({ ipHash });
+    if (existingUserFromIp) {
+      return res.status(500).send("An account already exists from this IP.");
     }
+
+    const existingUser = await users.findOne({ username: req.body.username });
+    if (existingUser) {
+      return res.status(500).send("That username already exists!");
+    }
+
+    const hashedPassword = await hashPassword(req.body.password);
+    const timezone = formatDateTime(localTime);
+
+    await users.insertOne({
+      username: req.body.username,
+      password: hashedPassword,
+      ipHash,
+      pfp: "https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png",
+      banner: "https://izumiihd.github.io/pixelitcdn/assets/img/banner/pixelitBanner.png",
+      id: Math.floor(Math.random() * 10000000000000000),
+      role: "Player",
+      tokens: 0,
+      sent: 0,
+      claimed: false,
+      muted: false,
+      muteReason: "No Reason Provided",
+      banned: false,
+      banReason: "No Reason Provided",
+      packs: await packs.find().toArray(),
+      badges: [],
+      banDuration: 0,
+      muteDuration: 0,
+      notifications: [],
+      joinDate: new Date().toISOString(),
+    });
+
+    return res.sendStatus(200);
   } catch (err) {
     console.error(err);
     res.status(502).send("Server Error!");
   }
 });
+
+
 
 router.get("/requests", async (req, res) => {
   if (!req.session.loggedIn) {
@@ -313,6 +352,7 @@ router.post("/addAccount", async (req, res) => {
             password: request.password,
             pfp:"https://izumiihd.github.io/pixelitcdn/assets/img/blooks/logo.png",
             banner: "https://izumiihd.github.io/pixelitcdn/assets/img/banner/pixelitBanner.png",
+            ipHash,
             id: generateRandomId(),
             role: "Player",
             tokens: 0,

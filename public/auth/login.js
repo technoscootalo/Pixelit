@@ -56,7 +56,7 @@ function login(event) {
 
       setTimeout(() => {
         window.location.href = '/dashboard'; 
-      }, 2000);
+      }, 0);
     } else if (status === 401) {
       errorMsg.style.color = "red";
       errorMsg.textContent = body.message || "Invalid username or password.";
