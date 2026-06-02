@@ -94,7 +94,7 @@ const client = new MongoClient(uri, {
   },
 });
 
-const db_name = "pixelit";
+const db_name = "Pixelit-V2";
 const db = client.db(db_name);
 const users = db.collection("users");
 const badges = db.collection("badges");
