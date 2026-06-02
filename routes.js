@@ -1,5 +1,4 @@
-  const path = require('path');
-require('dotenv').config();
+const path = require('path');
 const express = require("express");
 const router = express.Router();
 const { MongoClient, ServerApiVersion, Timestamp } = require("mongodb");
