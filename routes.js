@@ -74,7 +74,7 @@ async function run() {
 }
 run().catch(console.dir);
 
-const db_name = "pixelit";
+const db_name = "Pixelit-V2";
 const db = client.db(db_name);
 const newsCollection = db.collection("news");
 const users = db.collection("users");
