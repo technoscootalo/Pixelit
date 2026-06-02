@@ -10,7 +10,7 @@ async function validatePassword(password, hashedPassword) {
 }
 
 (async () => {
-    const hash = await hashPassword("test");
+    const hash = await hashPassword("tesat");
     console.log(hash);
 
     const isValid = await validatePassword("test", hash);
